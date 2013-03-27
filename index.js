@@ -47,7 +47,6 @@ function read2(stream) {
       if(ended && ended !== true) //ERROR
         return cb(ended)
       var data = stream.read()
-      console.log('read2', data)
 
       if(data == null) {
         if(ended)
@@ -68,7 +67,7 @@ function read(stream) {
   function drain() {
     while((buffer.length || ended) && cbs.length)
       cbs.shift()(buffer.length ? null : ended, buffer.shift())
-    if(!cbs.length && paused)
+    if(!buffer.length && paused)
       stream.resume(), paused = false
   }
 
