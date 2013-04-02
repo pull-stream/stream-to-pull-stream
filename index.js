@@ -16,11 +16,26 @@ function destroy(stream, cb) {
 }
 
 function write(read, stream) {
+  var ended
+  function onClose () {
+    cleanup()
+    if(!ended) read(ended = true)
+  }
+  function onError (err) {
+    cleanup()
+    if(!ended) read(ended = err)
+  }
+  function cleanup() {
+    stream.removeListener('close', onClose)
+    stream.removeListener('error', onError)
+  }
+  stream.on('close', onClose)
+  stream.on('error', onError)
   process.nextTick(function next() {
     read(null, function (end, data) {
       if(end === true)
         return stream._isStdio || stream.end()
-      if(end)
+      if(ended = ended || end)
         return stream.emit('error', end)
 
       var pause = stream.write(data)
