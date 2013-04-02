@@ -10,7 +10,9 @@
   "dependencies": {
     "pull-stream": "~2.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "through": "~2.2.7"
+  },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
   },
