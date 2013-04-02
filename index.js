@@ -40,8 +40,8 @@ function write(read, stream) {
 
       var pause = stream.write(data)
       if(pause === false)
-        return stream.on('drain', next)
-      next()
+        stream.on('drain', next)
+      else next()
     })
   })
 }
@@ -79,17 +79,20 @@ function read(stream) {
 
   var buffer = [], cbs = [], ended, paused = false
 
+  var draining
   function drain() {
     while((buffer.length || ended) && cbs.length)
       cbs.shift()(buffer.length ? null : ended, buffer.shift())
-    if(!buffer.length && paused)
-      stream.resume(), paused = false
+    if(!buffer.length && (paused)) {
+      paused = false
+      stream.resume() 
+    }
   }
 
   stream.on('data', function (data) {
     buffer.push(data)
     drain()
-    if(cbs.length && stream.pause) {
+    if(buffer.length && stream.pause) {
       paused = true
       stream.pause()
     }
@@ -102,7 +105,13 @@ function read(stream) {
     ended = err
     drain()
   })
-  return function (end, cb) {
+  return function (abort, cb) {
+    if(abort) {
+      stream.once('close', function () {
+        cb(abort)
+      })
+      stream.destroy()
+    }
     cbs.push(cb)
     drain()
   }
