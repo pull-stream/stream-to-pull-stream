@@ -19,11 +19,11 @@ function write(read, stream) {
   var ended
   function onClose () {
     cleanup()
-    if(!ended) read(ended = true)
+    if(!ended) read(ended = true, function () {})
   }
   function onError (err) {
     cleanup()
-    if(!ended) read(ended = err)
+    if(!ended) read(ended = err, function () {})
   }
   function cleanup() {
     stream.removeListener('close', onClose)
@@ -40,7 +40,7 @@ function write(read, stream) {
 
       var pause = stream.write(data)
       if(pause === false)
-        stream.on('drain', next)
+        stream.once('drain', next)
       else next()
     })
   })
@@ -106,6 +106,7 @@ function read(stream) {
     drain()
   })
   return function (abort, cb) {
+    if(!cb) throw new Error('*must* provide cb')
     if(abort) {
       stream.once('close', function () {
         cb(abort)
