@@ -46,29 +46,63 @@ function write(read, stream) {
   })
 }
 
-function read2(stream) {
-  var ended = false
-  var _cb
-  stream.on('end', function () {
-    ended = true
+function first (emitter, events, handler) {
+  function listener (val) {
+    events.forEach(function (e) {
+      emitter.removeListener(e, listener)
+    })
+    handler(val)
+  } 
+  events.forEach(function (e) {
+    emitter.on(e, listener)
   })
-  stream.on('error', function (err) {
+  return emitter
+}
+
+function read2(stream) {
+  var ended = false, waiting = false
+  var _cb
+
+  function read () {
+    var data = stream.read()
+    if(data !== null && _cb) {
+      var cb = _cb; _cb = null
+      cb(null, data)
+    }
+  }
+
+  stream.on('readable', function () {
+    waiting = true
+    _cb && read()
+  })
+  .on('end', function () {
+    ended = true
+    _cb && _cb(ended)
+  })
+  .on('error', function (err) {
     ended = err
     _cb && _cb(ended)
   })
+
   return function (end, cb) {
     _cb = cb
+    if(waiting)
+      read()
+    return
     ;(function next () {
+      console.log('READ')
       if(ended && ended !== true) //ERROR
         return cb(ended)
       var data = stream.read()
-
+      console.log('data', data, ended)
       if(data == null) {
         if(ended)
           return cb(ended)
-        return stream.once('readable', next)
-      } else
+        _cb = cb
+        stream.on('readable', next)
+      } else {
         return cb(null, data)
+      }
     })()
   }
 }
