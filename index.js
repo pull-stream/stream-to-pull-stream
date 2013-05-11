@@ -152,14 +152,28 @@ function read(stream) {
   }
 }
 
-module.exports = function (stream) {
+var sink = function (stream) {
+  return pull.Sink(function (read) {
+    return write(read, stream)
+  })()
+}
+
+var source = function (stream) {
+  return pull.Source(function () { return read(stream) })()
+}
+
+exports = module.exports = function (stream) {
   return (
     stream.writable
     ? stream.readable
-      ? pull.Through(function (r) { write(r, stream); return read(stream) })() 
-      : pull.Sink(function (r) { return write(r, stream) })()
-    : pull.Source(function () { return read(stream) })()
+      ? pull.Through(function(_read) {
+          write(_read, stream); 
+          return read(stream) 
+        })()  
+      : sink(stream)
+    : source(stream)
   )
 }
 
-
+exports.sink = sink
+exports.source = source
