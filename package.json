@@ -8,7 +8,7 @@
     "url": "git://github.com/dominictarr/stream-to-pull-stream.git"
   },
   "dependencies": {
-    "pull-stream": "~2.15"
+    "pull-core": "~1.0.0"
   },
   "devDependencies": {
     "through": "~2.2.7",
