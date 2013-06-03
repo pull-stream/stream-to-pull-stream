@@ -1,4 +1,4 @@
-var pull = require('pull-stream')
+var pull = require('pull-core')
 
 function destroy(stream, cb) {
   function onClose () {
@@ -90,11 +90,9 @@ function read2(stream) {
       read()
     return
     ;(function next () {
-      console.log('READ')
       if(ended && ended !== true) //ERROR
         return cb(ended)
       var data = stream.read()
-      console.log('data', data, ended)
       if(data == null) {
         if(ended)
           return cb(ended)
