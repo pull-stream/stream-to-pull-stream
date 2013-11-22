@@ -86,7 +86,9 @@ function read2(stream) {
 
   return function (end, cb) {
     _cb = cb
-    if(waiting)
+    if(ended)
+      cb(ended)
+    else if(waiting)
       read()
     return
     ;(function next () {
