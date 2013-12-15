@@ -85,27 +85,11 @@ function read2(stream) {
   })
 
   return function (end, cb) {
-    console.error('read!')
     _cb = cb
     if(ended)
       cb(ended)
     else if(waiting)
       read()
-    return
-
-//    ;(function next () {
-//      if(ended && ended !== true) //ERROR
-//        return cb(ended)
-//      var data = stream.read()
-//      if(data == null) {
-//        if(ended)
-//          return cb(ended)
-//        _cb = cb
-//        stream.on('readable', next)
-//      } else {
-//        return cb(null, data)
-//      }
-//    })()
   }
 }
 
