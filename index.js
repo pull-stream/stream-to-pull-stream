@@ -85,32 +85,31 @@ function read2(stream) {
   })
 
   return function (end, cb) {
+    console.error('read!')
     _cb = cb
     if(ended)
       cb(ended)
     else if(waiting)
       read()
     return
-    ;(function next () {
-      if(ended && ended !== true) //ERROR
-        return cb(ended)
-      var data = stream.read()
-      if(data == null) {
-        if(ended)
-          return cb(ended)
-        _cb = cb
-        stream.on('readable', next)
-      } else {
-        return cb(null, data)
-      }
-    })()
+
+//    ;(function next () {
+//      if(ended && ended !== true) //ERROR
+//        return cb(ended)
+//      var data = stream.read()
+//      if(data == null) {
+//        if(ended)
+//          return cb(ended)
+//        _cb = cb
+//        stream.on('readable', next)
+//      } else {
+//        return cb(null, data)
+//      }
+//    })()
   }
 }
 
-function read(stream) {
-  if('function' === typeof stream.read)
-    return read2(stream)
-
+function read1(stream) {
   var buffer = [], cbs = [], ended, paused = false
 
   var draining
@@ -119,7 +118,7 @@ function read(stream) {
       cbs.shift()(buffer.length ? null : ended, buffer.shift())
     if(!buffer.length && (paused)) {
       paused = false
-      stream.resume() 
+      stream.resume()
     }
   }
 
@@ -152,6 +151,12 @@ function read(stream) {
   }
 }
 
+function read (stream) {
+  if('function' === typeof stream.read)
+    return read2(stream)
+  return read1(stream)
+}
+
 var sink = function (stream) {
   return pull.Sink(function (read) {
     return write(read, stream)
@@ -177,3 +182,7 @@ exports = module.exports = function (stream) {
 
 exports.sink = sink
 exports.source = source
+exports.read = read
+exports.read1 = read1
+exports.read2 = read2
+
