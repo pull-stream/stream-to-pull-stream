@@ -15,29 +15,37 @@ function destroy(stream, cb) {
   stream.on('error', onError)
 }
 
-function write(read, stream) {
-  var ended
+function write(read, stream, cb) {
+  var ended, closed = false
+  function done (end) {
+    cb && cb(end === true ? null : end)
+  }
   function onClose () {
+    if(closed) return
+    closed = true
     cleanup()
-    if(!ended) read(ended = true, function () {})
+    if(!ended) read(ended = true, done)
   }
   function onError (err) {
     cleanup()
-    if(!ended) read(ended = err, function () {})
+    if(!ended) read(ended = err, done)
   }
   function cleanup() {
+    stream.on('finish', onClose)
     stream.removeListener('close', onClose)
     stream.removeListener('error', onError)
   }
   stream.on('close', onClose)
+  stream.on('finish', onClose)
   stream.on('error', onError)
   process.nextTick(function next() {
     read(null, function (end, data) {
       if(end === true)
         return stream._isStdio || stream.end()
-      if(ended = ended || end)
-        return stream.emit('error', end)
-
+      if(ended = ended || end) {
+        if(stream.destroy) stream.destroy()
+        else return cb(ended)
+      }
       var pause = stream.write(data)
       if(pause === false)
         stream.once('drain', next)
@@ -141,9 +149,9 @@ function read (stream) {
   return read1(stream)
 }
 
-var sink = function (stream) {
+var sink = function (stream, cb) {
   return pull.Sink(function (read) {
-    return write(read, stream)
+    return write(read, stream, cb)
   })()
 }
 
@@ -151,15 +159,15 @@ var source = function (stream) {
   return pull.Source(function () { return read(stream) })()
 }
 
-exports = module.exports = function (stream) {
+exports = module.exports = function (stream, cb) {
   return (
     stream.writable
     ? stream.readable
       ? pull.Through(function(_read) {
-          write(_read, stream); 
+          write(_read, stream, cb); 
           return read(stream) 
         })()  
-      : sink(stream)
+      : sink(stream, cb)
     : source(stream)
   )
 }
