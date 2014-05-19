@@ -9,9 +9,14 @@ Convert a classic-stream, or a new-stream into a
 var toPullStream = require('stream-to-pull-stream')
 var pull = require('pull-stream')
 
-toPullStream(fs.createReadStream(__filename))
-  .pipe(pull.map(function (e) { return e.toString().toUpperCase() }))
-  .pipe(toPullStream(process.stdout))
+pull(
+  toPullStream.source(fs.createReadStream(__filename)),
+  pull.map(function (e) { return e.toString().toUpperCase() }),
+  toPullStream.sink(process.stdout, function (err) {
+    if(err) throw err
+    console.log('done')
+  })
+)
 ```
 
 ## License
