@@ -75,7 +75,6 @@ function read2(stream) {
   function read () {
     var data = stream.read()
     if(data !== null && cbs.length) {
-      console.log("da", data)
       output.push([null, data]);
       waiting = false;
       drain();
