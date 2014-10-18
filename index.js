@@ -178,4 +178,9 @@ exports.source = source
 exports.read = read
 exports.read1 = read1
 exports.read2 = read2
-
+exports.duplex = function (stream) {
+  return {
+    source: source(stream),
+    sink: sink(stream)
+  }
+}
