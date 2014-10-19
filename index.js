@@ -40,8 +40,9 @@ function write(read, stream, cb) {
   stream.on('error', onError)
   process.nextTick(function next() {
     read(null, function (end, data) {
+      ended = ended || end
       if(end === true)
-        return stream._isStdio ? done() : stream.end() 
+        return stream._isStdio ? done() : stream.end()
 
       if(ended = ended || end) {
         stream.destroy && stream.destroy()
@@ -178,9 +179,9 @@ exports.source = source
 exports.read = read
 exports.read1 = read1
 exports.read2 = read2
-exports.duplex = function (stream) {
+exports.duplex = function (stream, cb) {
   return {
     source: source(stream),
-    sink: sink(stream)
+    sink: sink(stream, cb)
   }
 }
