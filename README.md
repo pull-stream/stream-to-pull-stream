@@ -19,7 +19,8 @@ pull(
 )
 ```
 
-if the node steam is a duplex (i.e. net, ws) then use `toPull.duplex(stream)`
+if the node steam is a duplex (i.e. net, ws) then use `toPull.duplex(stream, cb?)`
+`duplex` takes an optional callback in the same way that `sink` does.
 
 ## License
 
