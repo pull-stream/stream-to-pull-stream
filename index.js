@@ -25,6 +25,7 @@ function write(read, stream, cb) {
     closed = true
     cleanup()
     if(!ended) read(ended = true, done)
+    else       done()
   }
   function onError (err) {
     cleanup()
