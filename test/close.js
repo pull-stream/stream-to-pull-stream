@@ -13,14 +13,17 @@ require('tape')('propagate close back to source', function (t) {
     if(i++ > 100)
       ts.destroy()
   })
-  pull.infinite()
-    .pipe(function (read) {
+
+  pull(
+    pull.infinite(),
+    function (read) {
       return function (abort, cb) {
         if(abort) return t.ok(true), t.end()
         read(false, cb)
       }
-    })
-    .pipe(toPull(ts))
-    .pipe(pull.drain())
+    },
+    toPull(ts),
+    pull.drain()
+  )
 
 })
