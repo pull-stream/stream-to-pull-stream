@@ -16,9 +16,11 @@ function destroy(stream, cb) {
 }
 
 function write(read, stream, cb) {
-  var ended, closed = false
-  function done (end) {
-    cb && cb(end === true ? null : end)
+  var ended, closed = false, did
+  function done () {
+    if(did) return
+    did = true
+    cb && cb(ended === true ? null : ended)
   }
   function onClose () {
     if(closed) return
@@ -42,6 +44,7 @@ function write(read, stream, cb) {
   process.nextTick(function next() {
     read(null, function (end, data) {
       ended = ended || end
+      end && console.log('end', end)
       if(end === true)
         return stream._isStdio ? done() : stream.end()
 
@@ -63,7 +66,7 @@ function first (emitter, events, handler) {
       emitter.removeListener(e, listener)
     })
     handler(val)
-  } 
+  }
   events.forEach(function (e) {
     emitter.on(e, listener)
   })
@@ -146,11 +149,7 @@ function read1(stream) {
   }
 }
 
-function read (stream) {
-  if('function' === typeof stream.read)
-    return read2(stream)
-  return read1(stream)
-}
+var read = read1
 
 var sink = function (stream, cb) {
   return pull.Sink(function (read) {
@@ -159,17 +158,17 @@ var sink = function (stream, cb) {
 }
 
 var source = function (stream) {
-  return pull.Source(function () { return read(stream) })()
+  return pull.Source(function () { return read1(stream) })()
 }
 
 exports = module.exports = function (stream, cb) {
   return (
-    stream.writable
+    (stream.writable && stream.write)
     ? stream.readable
       ? pull.Through(function(_read) {
-          write(_read, stream, cb); 
-          return read(stream) 
-        })()  
+          write(_read, stream, cb);
+          return read1(stream)
+        })()
       : sink(stream, cb)
     : source(stream)
   )
