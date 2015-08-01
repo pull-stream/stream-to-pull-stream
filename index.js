@@ -44,7 +44,6 @@ function write(read, stream, cb) {
   process.nextTick(function next() {
     read(null, function (end, data) {
       ended = ended || end
-      end && console.log('end', end)
       if(end === true)
         return stream._isStdio ? done() : stream.end()
 
