@@ -22,9 +22,6 @@ function write(read, stream, cb) {
     did = true
     cb && cb(ended === true ? null : ended)
   }
-  stream.on('drain', function () {
-    console.error('DRAIN')
-  })
 
   function onClose () {
     if(closed) return
@@ -50,22 +47,27 @@ function write(read, stream, cb) {
     read(null, function (end, data) {
       ended = ended || end
       //you can't "end" a stdout stream, so this needs to be handled specially.
-      //I noticed a problem streaming to the terminal:
-      //sometimes the end got cut off, creating invalid output.
-      //it seems that stdout always emits "drain" when it ends.
-      //so this seems to work, but i have been unable to reproduce this test
-      //automatically, so you need to run ./test/stdout.js a few times and the end is valid json.
       if(end === true)
-        return stream._isStdio ? stream.once('drain', done) : stream.end()
+        return stream._isStdio ? done() : stream.end()
 
       if(ended = ended || end) {
         stream.destroy && stream.destroy()
         return done(ended)
       }
-      var pause = stream.write(data)
-      if(pause === false)
-        stream.once('drain', next)
-      else next()
+
+      //I noticed a problem streaming to the terminal:
+      //sometimes the end got cut off, creating invalid output.
+      //it seems that stdout always emits "drain" when it ends.
+      //so this seems to work, but i have been unable to reproduce this test
+      //automatically, so you need to run ./test/stdout.js a few times and the end is valid json.
+      if(stream._isStdio)
+        stream.write(data, function () { next() })
+      else {
+        var pause = stream.write(data)
+        if(pause === false)
+          stream.once('drain', next)
+        else next()
+      }
     })
   })
 }

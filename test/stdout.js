@@ -1,7 +1,7 @@
 
 //test that stdout doesn't leave anything hanging.
 //unfortunately i have not been able to reproduce this automatically.
-//so i have
+//so you have to run this and check for valid output + the text "VALID END"
 
 
 var toPull = require('../')
@@ -23,6 +23,7 @@ pull(
   }),
   toPull.sink(process.stdout, function (err) {
     if(err) throw err
+    console.log('VALID END')
     process.exit()
   })
 )
