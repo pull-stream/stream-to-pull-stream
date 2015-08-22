@@ -22,9 +22,14 @@ function write(read, stream, cb) {
     did = true
     cb && cb(ended === true ? null : ended)
   }
+  stream.on('drain', function () {
+    console.error('DRAIN')
+  })
+
   function onClose () {
     if(closed) return
     closed = true
+    console.error('close')
     cleanup()
     if(!ended) read(ended = true, done)
     else       done()
@@ -44,8 +49,14 @@ function write(read, stream, cb) {
   process.nextTick(function next() {
     read(null, function (end, data) {
       ended = ended || end
+      //you can't "end" a stdout stream, so this needs to be handled specially.
+      //I noticed a problem streaming to the terminal:
+      //sometimes the end got cut off, creating invalid output.
+      //it seems that stdout always emits "drain" when it ends.
+      //so this seems to work, but i have been unable to reproduce this test
+      //automatically, so you need to run ./test/stdout.js a few times and the end is valid json.
       if(end === true)
-        return stream._isStdio ? done() : stream.end()
+        return stream._isStdio ? stream.once('drain', done) : stream.end()
 
       if(ended = ended || end) {
         stream.destroy && stream.destroy()
