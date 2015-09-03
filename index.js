@@ -26,7 +26,6 @@ function write(read, stream, cb) {
   function onClose () {
     if(closed) return
     closed = true
-    console.error('close')
     cleanup()
     if(!ended) read(ended = true, done)
     else       done()
