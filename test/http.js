@@ -10,13 +10,16 @@ var thisFile = fs.readFileSync(__filename, 'utf-8')
 test('test http', function (t) {
 
   var server = http.createServer(function (req, res) {
-    toPull(req).pipe(pull.reduce(function (b, s) {
-        return b + s
-      }, '', function (err, body) {
-        t.equal(body, thisFile)
-        t.notOk(err)
-        res.end('done')
-    }))
+    pull(
+      toPull(req),
+      pull.reduce(function (b, s) {
+          return b + s
+        }, '', function (err, body) {
+          t.equal(body, thisFile)
+          t.notOk(err)
+          res.end('done')
+      })
+    )
   }).listen(port, function () {
 
     fs.createReadStream(__filename)
@@ -26,10 +29,13 @@ test('test http', function (t) {
 
         setTimeout(function () {
 
-          _res.pipe(pull.collect(function (err, ary) {
-            t.equal(ary.map(String).join(''), 'done')
-            t.end()
-          }))
+          pull(
+            _res,
+            pull.collect(function (err, ary) {
+              t.equal(ary.map(String).join(''), 'done')
+              t.end()
+            })
+          )
 
         }, 200)
 

@@ -21,16 +21,18 @@ if (stream.Readable) {
       if (i >= this._max) this.push(null)
     };
 
-    toPull(new Counter())
-    .pipe(pull.asyncMap(function (value, done) {
-      process.nextTick(function() {
-        done(null, value)
+    pull(
+      toPull(new Counter()),
+      pull.asyncMap(function (value, done) {
+        process.nextTick(function() {
+          done(null, value)
+        })
+      }),
+      pull.collect(function (err, values) {
+        t.deepEqual(values, [1, 2, 3, 4, 5])
+        t.end()
       })
-    }))
-    .pipe(pull.collect(function (err, values) {
-      t.deepEqual(values, [1, 2, 3, 4, 5])
-      t.end()
-    }))
+    )
 
   })
 }

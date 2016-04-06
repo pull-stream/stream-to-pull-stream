@@ -23,7 +23,7 @@ pull(
   }),
   toPull.sink(process.stdout, function (err) {
     if(err) throw err
-    console.log('VALID END')
+//    console.log('VALID END')
     process.exit()
   })
 )
