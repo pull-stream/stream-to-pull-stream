@@ -1,4 +1,4 @@
-var pull = require('pull-core')
+var pull = require('pull-stream/pull')
 
 function destroy(stream, cb) {
   function onClose () {
@@ -163,23 +163,23 @@ function read1(stream) {
 var read = read1
 
 var sink = function (stream, cb) {
-  return pull.Sink(function (read) {
+  return function (read) {
     return write(read, stream, cb)
-  })()
+  }
 }
 
 var source = function (stream) {
-  return pull.Source(function () { return read1(stream) })()
+  return read1(stream)
 }
 
 exports = module.exports = function (stream, cb) {
   return (
     (stream.writable && stream.write)
     ? stream.readable
-      ? pull.Through(function(_read) {
+      ? function(_read) {
           write(_read, stream, cb);
           return read1(stream)
-        })()
+        }
       : sink(stream, cb)
     : source(stream)
   )
@@ -196,3 +196,7 @@ exports.duplex = function (stream, cb) {
     sink: sink(stream, cb)
   }
 }
+
+
+
+
