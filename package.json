@@ -8,12 +8,11 @@
     "url": "git://github.com/dominictarr/stream-to-pull-stream.git"
   },
   "dependencies": {
-    "pull-core": "~1.0.0",
     "pull-stream": "^3.2.3"
   },
   "devDependencies": {
-    "through": "~2.3.4",
-    "tape": "~2.13.1",
+    "tape": "^4.5.1",
+    "through": "~2.3.4"
   },
   "scripts": {
     "test": "set -e; for t in test/*.js; do node $t; done"
@@ -21,4 +20,3 @@
   "author": "Dominic Tarr <dominic.tarr@gmail.com> (http://dominictarr.com)",
   "license": "MIT"
 }
-
