@@ -15,6 +15,17 @@ function destroy(stream, cb) {
   stream.on('error', onError)
 }
 
+function destroy (stream) {
+  if(!stream.destroy)
+    console.error(
+      'warning, stream-to-pull-stream: \n'
+    + 'the wrapped node-stream does not implement `destroy`, \n'
+    + 'this may cause resource leaks.'
+    )
+  else stream.destroy()
+
+}
+
 function write(read, stream, cb) {
   var ended, closed = false, did
   function done () {
@@ -50,7 +61,7 @@ function write(read, stream, cb) {
         return stream._isStdio ? done() : stream.end()
 
       if(ended = ended || end) {
-        stream.destroy && stream.destroy()
+        destroy(stream)
         return done(ended)
       }
 
@@ -153,7 +164,7 @@ function read1(stream) {
       stream.once('close', function () {
         cb(abort)
       })
-      stream.destroy()
+      destroy(stream)
     }
     cbs.push(cb)
     drain()
@@ -196,6 +207,8 @@ exports.duplex = function (stream, cb) {
     sink: sink(stream, cb)
   }
 }
+
+
 
 
 
