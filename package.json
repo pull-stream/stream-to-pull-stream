@@ -11,6 +11,7 @@
     "pull-stream": "^3.2.3"
   },
   "devDependencies": {
+    "pull-split": "^0.2.0",
     "tape": "^4.5.1",
     "through": "~2.3.4"
   },
