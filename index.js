@@ -1,4 +1,5 @@
 var pull = require('pull-stream/pull')
+var looper = require('looper')
 
 function destroy(stream, cb) {
   function onClose () {
@@ -53,31 +54,33 @@ function write(read, stream, cb) {
   stream.on('close', onClose)
   stream.on('finish', onClose)
   stream.on('error', onError)
-  process.nextTick(function next() {
-    read(null, function (end, data) {
-      ended = ended || end
-      //you can't "end" a stdout stream, so this needs to be handled specially.
-      if(end === true)
-        return stream._isStdio ? done() : stream.end()
+  process.nextTick(function () {
+    looper(function (next) {
+      read(null, function (end, data) {
+        ended = ended || end
+        //you can't "end" a stdout stream, so this needs to be handled specially.
+        if(end === true)
+          return stream._isStdio ? done() : stream.end()
 
-      if(ended = ended || end) {
-        destroy(stream)
-        return done(ended)
-      }
+        if(ended = ended || end) {
+          destroy(stream)
+          return done(ended)
+        }
 
-      //I noticed a problem streaming to the terminal:
-      //sometimes the end got cut off, creating invalid output.
-      //it seems that stdout always emits "drain" when it ends.
-      //so this seems to work, but i have been unable to reproduce this test
-      //automatically, so you need to run ./test/stdout.js a few times and the end is valid json.
-      if(stream._isStdio)
-        stream.write(data, function () { next() })
-      else {
-        var pause = stream.write(data)
-        if(pause === false)
-          stream.once('drain', next)
-        else next()
-      }
+        //I noticed a problem streaming to the terminal:
+        //sometimes the end got cut off, creating invalid output.
+        //it seems that stdout always emits "drain" when it ends.
+        //so this seems to work, but i have been unable to reproduce this test
+        //automatically, so you need to run ./test/stdout.js a few times and the end is valid json.
+        if(stream._isStdio)
+          stream.write(data, function () { next() })
+        else {
+          var pause = stream.write(data)
+          if(pause === false)
+            stream.once('drain', next)
+          else next()
+        }
+      })
     })
   })
 }
@@ -207,6 +210,9 @@ exports.duplex = function (stream, cb) {
     sink: sink(stream, cb)
   }
 }
+
+
+
 
 
 
