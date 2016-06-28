@@ -210,12 +210,12 @@ exports.duplex = function (stream, cb) {
     sink: sink(stream, cb)
   }
 }
-
-
-
-
-
-
+exports.transform = function (stream) {
+  return function (read) {
+    var _source = source(stream)
+    sink(stream)(read); return _source
+  }
+}
 
 
 
