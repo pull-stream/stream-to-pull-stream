@@ -165,12 +165,15 @@ function read1(stream) {
     if(!cb) throw new Error('*must* provide cb')
     if(abort) {
       stream.once('close', function () {
+        while(cbs.length) cbs.shift()(abort)
         cb(abort)
       })
       destroy(stream)
     }
-    cbs.push(cb)
-    drain()
+    else {
+      cbs.push(cb)
+      drain()
+    }
   }
 }
 
@@ -216,6 +219,4 @@ exports.transform = function (stream) {
     sink(stream)(read); return _source
   }
 }
-
-
 
