@@ -157,6 +157,10 @@ function read1(stream) {
     ended = true
     drain()
   })
+  stream.on('close', function () {
+    ended = true
+    drain()
+  })
   stream.on('error', function (err) {
     ended = err
     drain()
@@ -164,10 +168,13 @@ function read1(stream) {
   return function (abort, cb) {
     if(!cb) throw new Error('*must* provide cb')
     if(abort) {
-      stream.once('close', function () {
+      function onAbort () {
         while(cbs.length) cbs.shift()(abort)
         cb(abort)
-      })
+      }
+      //if the stream happens to have already ended, then we don't need to abort.
+      if(ended) return onAbort()
+      stream.once('close', onAbort)
       destroy(stream)
     }
     else {
@@ -219,4 +226,12 @@ exports.transform = function (stream) {
     sink(stream)(read); return _source
   }
 }
+
+
+
+
+
+
+
+
 
