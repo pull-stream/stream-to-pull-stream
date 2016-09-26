@@ -3,8 +3,9 @@ var through = require('through')
 var toPull  = require('../')
 var Hang = require('pull-hang')
 var Cat = require('pull-cat')
+var tape = require('tape')
 
-require('tape')('abort', function (t) {
+tape('abort', function (t) {
 
   t.plan(2)
 
@@ -34,8 +35,7 @@ require('tape')('abort', function (t) {
   )
 })
 
-require('tape')('abort hang', function (t) {
-
+tape('abort hang', function (t) {
   var ts = through(), aborted = false, c = 0, _read, ended, closed
   ts.on('close', function () {
     closed = true
@@ -69,6 +69,53 @@ require('tape')('abort hang', function (t) {
     })
   }, 10)
 })
+
+
+
+tape('abort a stream that has already ended', function (t) {
+
+  var ts = through()
+
+  var n = 0
+  pull(
+    toPull.source(ts),
+    //like pull.take(4), but abort async.
+    function (read) {
+      return function (abort, cb) {
+        console.log(n)
+        if(n++ < 4) read(null, cb)
+        else {
+          //this would be quite a badly behaved node stream
+          //but it can be difficult to make a node stream that behaves well.
+          ts.end()
+          setTimeout(function () {
+            read(true, cb)
+          }, 10)
+        }
+      }
+    },
+    pull.collect(function (err, ary) {
+      if(err) throw err
+      t.deepEqual(ary, [1,2,3,4])
+      t.end()
+    })
+  )
+
+  ts.queue(1)
+  ts.queue(2)
+  ts.queue(3)
+  ts.queue(4)
+
+})
+
+
+
+
+
+
+
+
+
 
 
 
