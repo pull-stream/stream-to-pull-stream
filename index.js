@@ -99,36 +99,46 @@ function first (emitter, events, handler) {
 }
 
 function read2(stream) {
-  var ended = false, waiting = false
+  var ended = false, waiting = false, cbs = [], output = []
   var _cb
 
   function read () {
     var data = stream.read()
-    if(data !== null && _cb) {
-      var cb = _cb; _cb = null
-      cb(null, data)
+    if(data !== null && cbs.length) {
+      output.push([null, data]);
+      waiting = false;
+      drain();
     }
   }
 
   stream.on('readable', function () {
     waiting = true
-    _cb && read()
+    cbs.length && read()
   })
-  .on('end', function () {
-    ended = true
-    _cb && _cb(ended)
-  })
-  .on('error', function (err) {
-    ended = err
-    _cb && _cb(ended)
-  })
+    .on('end', function () {
+      ended = true
+      cbs.length && drain();
+    })
+    .on('error', function (err) {
+      ended = err
+      cbs.length && drain();
+    })
+
+  function drain() {
+    while (cbs.length && output.length) {
+      var out = output.shift();
+      cbs.shift()(out[0], out[1]);
+    }
+
+    while (cbs.length && ended)
+      cbs.shift()(ended)
+  }
 
   return function (end, cb) {
-    _cb = cb
-    if(ended)
-      cb(ended)
-    else if(waiting)
-      read()
+    if(ended) return cb(ended)
+    cbs.push(cb);
+
+    read();
   }
 }
 
