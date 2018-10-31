@@ -62,7 +62,7 @@ function write(read, stream, cb) {
         if(end === true)
           return stream._isStdio ? done() : stream.end()
 
-        if(ended = ended || end) {
+        if(ended) {
           destroy(stream)
           return done(ended)
         }
