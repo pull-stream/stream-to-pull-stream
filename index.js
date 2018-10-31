@@ -67,6 +67,12 @@ function write(read, stream, cb) {
           return done(ended)
         }
 
+        if(!stream.writable) {
+          return read(true, function() {
+            cleanup()
+          })
+        }
+
         //I noticed a problem streaming to the terminal:
         //sometimes the end got cut off, creating invalid output.
         //it seems that stdout always emits "drain" when it ends.
