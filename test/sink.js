@@ -50,3 +50,32 @@ tape('error', function (t) {
   )
 
 })
+
+// This should only occur with streams that are not
+// behaving properly. Streams that do not close properly
+// may not be writable, so subsequent writes will throw an error
+tape('write to stream when writable is false', (t) => {
+
+  var ts = through()
+  pull(
+    pull.values([1,2,3]),
+    function (read) {
+      return function (abort, cb) {
+        read(abort, function (end, data) {
+          if(data === 2) {
+            ts.writable = false
+            ts.write = function() {
+              throw new Error('Cannot call write after a stream was destroyed')
+            }
+          }
+          cb(end, data)
+        })
+      }
+    },
+    toPull.sink(ts, function (err, v) {
+      t.notOk(err)
+      t.end()
+    })
+  )
+
+})

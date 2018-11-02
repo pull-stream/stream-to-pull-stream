@@ -70,6 +70,7 @@ function write(read, stream, cb) {
         if(!stream.writable) {
           return read(true, function() {
             cleanup()
+            done(true)
           })
         }
 
