@@ -1,21 +1,6 @@
 var pull = require('pull-stream/pull')
 var looper = require('looper')
 
-function destroy(stream, cb) {
-  function onClose () {
-    cleanup(); cb()
-  }
-  function onError (err) {
-    cleanup(); cb(err)
-  }
-  function cleanup() {
-    stream.removeListener('close', onClose)
-    stream.removeListener('error', onError)
-  }
-  stream.on('close', onClose)
-  stream.on('error', onError)
-}
-
 function destroy (stream) {
   if(!stream.destroy)
     console.error(
