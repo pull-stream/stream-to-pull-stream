@@ -1,4 +1,3 @@
-var pull = require('pull-stream/pull')
 var looper = require('looper')
 
 function destroy (stream) {
@@ -70,19 +69,6 @@ function write(read, stream, cb) {
   })
 }
 
-function first (emitter, events, handler) {
-  function listener (val) {
-    events.forEach(function (e) {
-      emitter.removeListener(e, listener)
-    })
-    handler(val)
-  }
-  events.forEach(function (e) {
-    emitter.on(e, listener)
-  })
-  return emitter
-}
-
 function read2(stream) {
   var ended = false, waiting = false
   var _cb
@@ -120,7 +106,6 @@ function read2(stream) {
 function read1(stream) {
   var buffer = [], cbs = [], ended, paused = false
 
-  var draining
   function drain() {
     while((buffer.length || ended) && cbs.length)
       cbs.shift()(buffer.length ? null : ended, buffer.shift())
